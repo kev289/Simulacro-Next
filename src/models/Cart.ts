@@ -12,7 +12,9 @@ const CartSchema: Schema = new Schema<ICart>(
         productId: { type: String, required: true, trim: true},
         quantity: { type: Number, required: true, min: 1}
     },
-    { timestamps: true }
+    { timestamps: true, 
+        collection: 'carts'
+     }
 );
 
 export const Cart: Model<ICart> = 

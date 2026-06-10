@@ -11,7 +11,7 @@ import { IUser } from "../types/IUser";
 
 const UserSchema: Schema = new Schema<IUser>(
     {
-        name: { type: String, required: true, trim: true},
+        name: { type: String, required: true, trim: true, lowercase: true},
         email: {
                 type: String,
                 required: true,
@@ -21,7 +21,9 @@ const UserSchema: Schema = new Schema<IUser>(
                 },
         password: { type: String, required: true}
     }, 
-    { timestamps: true}
+    { timestamps: true,
+        collection: 'users'
+    }
 );
 
 export const User: Model<IUser> =

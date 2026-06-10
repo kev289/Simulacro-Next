@@ -10,7 +10,9 @@ const FavoriteSchema: Schema = new Schema<IFavorite>(
         userId: { type: String, required: true, trim: true },
         productId: { type: String, required: true, trim: true}
     },
-    { timestamps: true }
+    { timestamps: true,
+        collection: 'favorites'
+     }
 );
 
 export const Favorite: Model<IFavorite> = 
