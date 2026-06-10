@@ -1,4 +1,4 @@
 export interface IFavorite {
     userId: string;
-    product: string;
+    productId: string;
 }

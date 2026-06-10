@@ -4,3 +4,6 @@
 // Precio 
 // Descripcion
 // Stock
+
+import mongoose from "mongoose";
+import { IProduct } from "../types/IProduct";
