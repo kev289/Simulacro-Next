@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { LoginValidation } from "@/src/lib/validations";
 import { userService } from "@/src/services/user.service";
-import { access } from "fs";
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
     try {
         const body = await req.json();
 
