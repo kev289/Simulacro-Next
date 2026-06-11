@@ -17,5 +17,15 @@ export const ProductService = {
 
         const savedProduct = await newProduct.save()
         return savedProduct;
+    }, 
+
+    updateProduct: async (id: string, data: Partial<IProduct>) => {
+       const updateProduct = await Product.findByIdAndUpdate(id, data, { new: true})
+       return updateProduct;
+    },
+
+    deleteProduct: async (id: string) => {
+       const deleteProduct = await Product.findByIdAndDelete(id);
+       return deleteProduct; 
     }
 }
