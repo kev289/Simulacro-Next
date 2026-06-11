@@ -1,7 +1,7 @@
 import { ProductService } from "@/src/services/product.service";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { id: string }}) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
     try {
         const { id } = params;
 
@@ -12,6 +12,19 @@ export async function GET(req: Request, { params }: { params: { id: string }}) {
     }
 }
 
-export async function PUT(req: Request) {
-    
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+    try {
+        const { id } = params;
+        const body = await req.json();
+        const updateProduct = await ProductService.updateProduct(id, body);
+
+        if (!updateProduct) {
+            return NextResponse.json({ message: "Producto no encontrado" }, { status: 404 });
+        }
+
+        return NextResponse.json({ message: `${updateProduct.name} se ha actualizado correctamente` })
+    } catch (error) {
+        return NextResponse.json({ message:"Error", error}, { status: 500})
+    }
+
 }
