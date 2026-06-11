@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { LoginValidation } from "@/src/lib/validations";
 import { userService } from "@/src/services/user.service";
+import { strict } from "assert";
 
 export async function POST(req: Request) {
     try {
@@ -18,6 +19,13 @@ export async function POST(req: Request) {
             user,
             accessToken
         }, { status: 200});
+
+        response.cookies.set("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/"
+        });
 
         response.cookies.set("refreshToken", refreshToken, {
             httpOnly: true,
