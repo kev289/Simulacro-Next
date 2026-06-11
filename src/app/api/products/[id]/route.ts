@@ -1,0 +1,17 @@
+import { ProductService } from "@/src/services/product.service";
+import { NextResponse } from "next/server";
+
+export async function GET(req: Request, { params }: { params: { id: string }}) {
+    try {
+        const { id } = params;
+
+        const getProductById = await ProductService.getProductById(id)
+        return NextResponse.json({ getProductById }, { status: 200 })
+    } catch (error) {
+        return NextResponse.json({ message: "Error al obtener el producto", error }, { status: 500 })
+    }
+}
+
+export async function PUT(req: Request) {
+    
+}
