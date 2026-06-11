@@ -28,3 +28,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
 }
+
+export async function DELETE(req: Request, { params }: { params: { id: string }}) {
+    try {
+        const { id } = params;
+        const deleteProduct = await ProductService.deleteProduct(id)
+        if (!deleteProduct) {
+            return NextResponse.json({ message: "Producto no encontrado" }, { status: 404});
+        }
+
+        return NextResponse.json({ message: `${deleteProduct.name} se ha eliminado correctamente` })
+    } catch (error) {
+        return NextResponse.json({ message:"Error", error}, { status: 500})
+    }
+}
