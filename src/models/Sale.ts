@@ -8,7 +8,6 @@ const SaleSchema: Schema = new Schema<ISale>(
       required: true,
       trim: true,
     },
-
     products: [
       {
         productId: {
