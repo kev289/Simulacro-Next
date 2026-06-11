@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 
 type JWTPayload = {
     userId: string;
@@ -25,5 +25,10 @@ export const authLib = {
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("7d")
         .sign(JWT_SECRET);
-    }
+    },
+
+    verifyAccessToken: async (token: string) => {
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        return payload;
+    },
 }
