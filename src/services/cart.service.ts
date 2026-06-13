@@ -16,5 +16,9 @@ export const CartService = {
             await exist.save();        
             return exist;
         }
-    }
+    },
+    removeItemFromCart: async (cartItemId: string) => {
+    const deletedItem = await Cart.findByIdAndDelete(cartItemId);
+    return deletedItem;
+}
 }
