@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { SaleService } from "@/src/services/sale.service";
+import connectDB from "@/src/lib/mongodb";
 
 export async function GET(req: Request) {
     try {
+        await connectDB();
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get("userId");
 
@@ -19,6 +21,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        await connectDB();
         const { userId, total } = await req.json();
 
         if (!userId || !total) {

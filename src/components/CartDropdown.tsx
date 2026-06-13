@@ -1,7 +1,7 @@
 "use client";
 
 interface CartItem {
-  _id: string; // ID del registro en el carrito
+  _id: string; 
   productId: {
     _id: string;
     name: string;
@@ -32,12 +32,12 @@ export function CartDropdown({
   }, 0);
 
   return (
-    <div className="absolute top-16 right-8 w-80 bg-zinc-950 border border-zinc-800 shadow-2xl rounded p-4 z-50 font-mono">
+    <div className="absolute top-16 right-8 w-80 bg-white border border-zinc-800 shadow-2xl rounded p-4 z-50 font-mono">
       {/* HEADER */}
       <div className="flex justify-between items-center border-b border-zinc-800 pb-2 mb-4">
-        <span className="font-bold text-xs text-emerald-400">tu_carrito.json</span>
-        <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-xs">
-          [cerrar]
+        <span className="font-bold text-xs text-black">Carrito</span>
+        <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer">
+          Cerrar carrito
         </button>
       </div>
       
@@ -58,7 +58,7 @@ export function CartDropdown({
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-zinc-200 truncate w-28">{item.productId?.name}</h4>
-                  <span className="text-[10px] text-emerald-400">${((item.productId?.price || 0) * item.quantity).toFixed(2)}</span>
+                  <span className="text-[10px] text-black">${((item.productId?.price || 0) * item.quantity).toFixed(2)}</span>
                 </div>
               </div>
 
@@ -68,7 +68,7 @@ export function CartDropdown({
                   <button 
                     onClick={() => onUpdateQuantity(item._id, item.quantity - 1)}
                     disabled={item.quantity <= 1}
-                    className="px-1.5 py-0.5 hover:text-emerald-400 disabled:opacity-30"
+                    className="px-1.5 py-0.5 hover:text-black disabled:opacity-30"
                   >
                     -
                   </button>
@@ -97,15 +97,15 @@ export function CartDropdown({
       {/* FOOTER */}
       <div className="border-t border-zinc-800 mt-4 pt-4 space-y-3">
         <div className="flex justify-between text-xs">
-          <span className="text-zinc-400">Total:</span>
-          <span className="font-bold text-emerald-400">${total.toFixed(2)}</span>
+          <span className="text-gray">Total:</span>
+          <span className="font-bold text-black">${total.toFixed(2)}</span>
         </div>
         <button 
           onClick={onCheckout}
           disabled={cartItems.length === 0}
-          className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-2 rounded text-xs transition-colors disabled:opacity-50 disabled:hover:bg-emerald-500"
+          className="w-full bg-black hover:bg-gray text-white font-bold py-2 rounded text-xs transition-colors disabled:opacity-50 cursor-pointer "
         >
-          EXECUTE_CHECKOUT()
+          Finalizar compra.
         </button>
       </div>
     </div>

@@ -1,116 +1,167 @@
 "use client";
-import { useState } from "react";
-// Aquí iremos importando los componentes a medida que los creemos
-// import { Sidebar } from "@/src/components/Sidebar";
-// import { ProductGrid } from "@/src/components/ProductGrid";
-// import { FavoritesList } from "@/src/components/FavoritesList";
-// import { OrderHistory } from "@/src/components/OrderHistory";
-// import { CartDropdown } from "@/src/components/CartDropdown";
+import { useState, useEffect } from "react";
+import { ProductGrid } from "@/src/components/ProductGrid";
+import { CartDropdown } from "@/src/components/CartDropdown";
+import { FavoritesList } from "@/src/components/FavoritesList";
+import { OrderHistory } from "@/src/components/OrderHistory";
+
+const MOCK_USER_ID = "645b8e9f1c4b2a3d4e5f6g7h"; 
 
 export default function DashboardPage() {
-  // Controla qué se ve en el área central
   const [currentView, setCurrentView] = useState<"shop" | "favorites" | "history">("shop");
-  
-  // Controla el cuadradito flotante del carrito
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+
+  const fetchCart = async () => {
+    try {
+      const res = await fetch(`/api/cart?userId=${MOCK_USER_ID}`);
+      const data = await res.json();
+      setCartItems(data.cart || []);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  const handleAddToCart = async (productId: string) => {
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: MOCK_USER_ID, productId, quantity: 1 }),
+      });
+      if (res.ok) await fetchCart();
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
+  };
+
+  const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => {
+    setCartItems(prev => prev.map(item => 
+      item._id === cartItemId ? { ...item, quantity: newQuantity } : item
+    ));
+  };
+
+  const handleRemoveCartItem = async (cartItemId: string) => {
+    try {
+      const res = await fetch(`/api/cart?cartItemId=${cartItemId}`, { method: "DELETE" });
+      if (res.ok) await fetchCart();
+    } catch (error) {
+      console.error("Error removing cart item:", error);
+    }
+  };
+
+  const handleRemoveFavorite = async (favId: string) => {
+    try {
+      await fetch(`/api/favorites?favId=${favId}`, { method: "DELETE" });
+      setCurrentView("shop");
+      setTimeout(() => setCurrentView("favorites"), 10);
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      const total = cartItems.reduce((acc, item) => acc + (item.productId?.price || 0) * item.quantity, 0);
+      const res = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: MOCK_USER_ID, total }),
+      });
+
+      if (res.ok) {
+        setCartItems([]);
+        setIsCartOpen(false);
+        setCurrentView("history");
+      }
+    } catch (error) {
+      console.error("Error during checkout:", error);
+    }
+  };
+
+  const totalItemsInCart = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div className="relative flex h-screen w-full bg-black text-zinc-100 antialiased font-mono selection:bg-emerald-500 selection:text-black">
+    <div className="relative flex h-screen w-full bg-[#f6f6f6] text-[#111111] antialiased font-mono selection:bg-[#111111] selection:text-white">
       
-      {/* SIDEBAR / NAVBAR IZQUIERDO */}
-      {/* <Sidebar currentView={currentView} setCurrentView={setCurrentView} setIsCartOpen={setIsCartOpen} isCartOpen={isCartOpen} /> */}
-      <aside className="w-64 border-r border-zinc-800 p-6 flex flex-col justify-between bg-zinc-950">
+      <aside className="w-64 border-r border-[#e5e5e5] p-6 flex flex-col justify-between bg-white select-none">
         <div>
-          <h1 className="text-xl font-bold tracking-wider text-emerald-500 mb-8 font-mono">
-            CORE_STORE
-          </h1>
-          <nav className="space-y-2">
+          <div className="border-b border-[#111111] pb-4 mb-8">
+            <h1 className="text-sm font-black tracking-tighter uppercase text-[#111111]">
+              Mi Tienda
+            </h1>
+            <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-tight">Panel de Administración</p>
+          </div>
+
+          <nav className="space-y-1">
             <button 
               onClick={() => setCurrentView("shop")}
-              className={`w-full text-left px-4 py-2 rounded transition-colors ${currentView === "shop" ? "bg-zinc-800 text-emerald-400 font-bold border-l-2 border-emerald-500" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}`}
+              className={`w-full text-left px-3 py-2 text-xs font-bold transition-all border ${currentView === "shop" ? "bg-[#111111] border-[#111111] text-white" : "border-transparent text-zinc-600 hover:bg-[#f6f6f6] hover:text-[#111111]"}`}
             >
-              [//] Tienda
+              Catálogo
             </button>
             <button 
               onClick={() => setCurrentView("favorites")}
-              className={`w-full text-left px-4 py-2 rounded transition-colors ${currentView === "favorites" ? "bg-zinc-800 text-emerald-400 font-bold border-l-2 border-emerald-500" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}`}
+              className={`w-full text-left px-3 py-2 text-xs font-bold transition-all border ${currentView === "favorites" ? "bg-[#111111] border-[#111111] text-white" : "border-transparent text-zinc-600 hover:bg-[#f6f6f6] hover:text-[#111111]"}`}
             >
-              [*] Favoritos
+              Favoritos
             </button>
             <button 
               onClick={() => setCurrentView("history")}
-              className={`w-full text-left px-4 py-2 rounded transition-colors ${currentView === "history" ? "bg-zinc-800 text-emerald-400 font-bold border-l-2 border-emerald-500" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"}`}
+              className={`w-full text-left px-3 py-2 text-xs font-bold transition-all border ${currentView === "history" ? "bg-[#111111] border-[#111111] text-white" : "border-transparent text-zinc-600 hover:bg-[#f6f6f6] hover:text-[#111111]"}`}
             >
-              [$] Mis Compras
+              Mis Pedidos
             </button>
           </nav>
         </div>
 
-        {/* BOTÓN DEL CARRITO EN EL SIDEBAR */}
         <button 
           onClick={() => setIsCartOpen(!isCartOpen)}
-          className={`w-full py-3 px-4 rounded border transition-all duration-200 flex justify-between items-center ${isCartOpen ? "bg-emerald-500 text-black border-emerald-500 font-bold" : "border-zinc-800 bg-zinc-900 hover:border-emerald-500 text-zinc-200"}`}
+          className={`w-full py-2.5 px-3 text-xs font-bold border transition-all duration-150 flex justify-between items-center ${isCartOpen ? "bg-[#111111] text-white border-[#111111]" : "border-[#111111] bg-white hover:bg-[#111111] hover:text-white"}`}
         >
-          <span>🛒 Carrito</span>
-          <span className={`px-2 py-0.5 text-xs rounded-full ${isCartOpen ? "bg-black text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>
-            0
+          <span>🛒 Ver Carrito</span>
+          <span className={`px-2 py-0.5 text-[10px] font-bold border ${isCartOpen ? "bg-white text-[#111111] border-white" : "bg-[#111111] text-white border-[#111111]"}`}>
+            {String(totalItemsInCart).padStart(2, '0')}
           </span>
         </button>
       </aside>
 
-      {/* CONTENIDO PRINCIPAL DINÁMICO */}
-      <main className="flex-1 overflow-y-auto p-8 bg-zinc-900/40">
-        {currentView === "shop" && (
-          <div>
-            <h2 className="text-2xl font-bold border-b border-zinc-800 pb-4 mb-6">__catálogo_productos</h2>
-            {/* <ProductGrid /> */}
-            <p className="text-zinc-500 text-sm">Aquí se renderizará la grilla de productos...</p>
+      <main className="flex-1 overflow-y-auto p-8 flex flex-col">
+        
+        <div className="flex justify-between items-center border-b-2 border-[#111111] pb-4 mb-8">
+          <div className="flex space-x-4 items-center">
+            <span className="text-xs font-bold tracking-widest uppercase text-[#111111]">
+              {currentView === "shop" && "CATÁLOGO DE PRODUCTOS"}
+              {currentView === "favorites" && "TUS PRODUCTOS FAVORITOS"}
+              {currentView === "history" && "HISTORIAL DE PEDIDOS"}
+            </span>
           </div>
-        )}
-
-        {currentView === "favorites" && (
-          <div>
-            <h2 className="text-2xl font-bold border-b border-zinc-800 pb-4 mb-6">__mis_favoritos</h2>
-            {/* <FavoritesList /> */}
-            <p className="text-zinc-500 text-sm">Aquí se renderizarán tus productos guardados...</p>
-          </div>
-        )}
-
-        {currentView === "history" && (
-          <div>
-            <h2 className="text-2xl font-bold border-b border-zinc-800 pb-4 mb-6">__historial_compras</h2>
-            {/* <OrderHistory /> */}
-            <p className="text-zinc-500 text-sm">Aquí aparecerán tus facturas guardadas...</p>
-          </div>
-        )}
-      </main>
-
-      {/* CUADRADITO FLOTANTE DEL CARRITO (DROPDOWN / POPUP) */}
-      {isCartOpen && (
-        <div className="absolute top-16 right-8 w-80 bg-zinc-950 border border-zinc-800 shadow-2xl rounded p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex justify-between items-center border-b border-zinc-800 pb-2 mb-4">
-            <span className="font-bold text-sm text-emerald-400">tu_carrito.json</span>
-            <button onClick={() => setIsCartOpen(false)} className="text-zinc-500 hover:text-zinc-300 text-xs">
-              [cerrar]
-            </button>
-          </div>
-          
-          {/* Contenedor de items */}
-          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-            <p className="text-xs text-zinc-500 text-center py-4">El carrito está vacío.</p>
-          </div>
-
-          {/* Footer del carrito */}
-          <div className="border-t border-zinc-800 mt-4 pt-4 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-zinc-400">Total:</span>
-              <span className="font-bold text-emerald-400">$0.00</span>
-            </div>
-            <button className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold py-2 rounded text-xs transition-colors">
-              EXECUTE_CHECKOUT()
-            </button>
+          <div className="flex space-x-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+            <span>Mostrando Todos</span>
+            <span>•</span>
+            <span>Ordenar por: Precio</span>
           </div>
         </div>
+
+        <div className="flex-1">
+          {currentView === "shop" && <ProductGrid onAddToCart={handleAddToCart} />}
+          {currentView === "favorites" && <FavoritesList userId={MOCK_USER_ID} onRemoveFavorite={handleRemoveFavorite} />}
+          {currentView === "history" && <OrderHistory userId={MOCK_USER_ID} />}
+        </div>
+      </main>
+
+      {isCartOpen && (
+        <CartDropdown 
+          cartItems={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveCartItem}
+          onCheckout={handleCheckout}
+          onClose={() => setIsCartOpen(false)}
+        />
       )}
 
     </div>

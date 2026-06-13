@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { CartService } from "@/src/services/cart.service";
+import connectDB from "@/src/lib/mongodb";
 
 export async function GET(req: Request) {
     try {
+        await connectDB();
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get("userId");
 
@@ -19,6 +21,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        await connectDB();
         const { userId, productId, quantity } = await req.json();
 
         if (!userId || !productId || !quantity) {
@@ -34,6 +37,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
+        await connectDB();
         const { searchParams } = new URL(req.url);
         const cartItemId = searchParams.get("cartItemId");
 
