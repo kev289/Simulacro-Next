@@ -1,17 +1,24 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ProductGrid } from "@/src/components/ProductGrid";
 import { CartDropdown } from "@/src/components/CartDropdown";
 import { FavoritesList } from "@/src/components/FavoritesList";
 import { OrderHistory } from "@/src/components/OrderHistory";
 
-const MOCK_USER_ID = "645b8e9f1c4b2a3d4e5f6g7h"; 
+const MOCK_USER_ID = "645b8e9f1c4b2a3d4e5f6g7h";
+
+type FloatingPanel = "favorites" | "history" | "cart" | null;
 
 export default function DashboardPage() {
-  const [currentView, setCurrentView] = useState<"shop" | "favorites" | "history">("shop");
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<FloatingPanel>(null);
   const [cartItems, setCartItems] = useState<any[]>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
 
+  const togglePanel = (panel: FloatingPanel) => {
+    setActivePanel((prev) => (prev === panel ? null : panel));
+  };
+
+  /* ── Cart API ── */
   const fetchCart = async () => {
     try {
       const res = await fetch(`/api/cart?userId=${MOCK_USER_ID}`);
@@ -24,6 +31,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchCart();
+  }, []);
+
+  /* ── Click outside to close panel ── */
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        const navbar = document.getElementById("dashboard-navbar");
+        if (navbar && navbar.contains(e.target as Node)) return;
+        setActivePanel(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleAddToCart = async (productId: string) => {
@@ -40,9 +60,11 @@ export default function DashboardPage() {
   };
 
   const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => {
-    setCartItems(prev => prev.map(item => 
-      item._id === cartItemId ? { ...item, quantity: newQuantity } : item
-    ));
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item._id === cartItemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
   };
 
   const handleRemoveCartItem = async (cartItemId: string) => {
@@ -57,8 +79,9 @@ export default function DashboardPage() {
   const handleRemoveFavorite = async (favId: string) => {
     try {
       await fetch(`/api/favorites?favId=${favId}`, { method: "DELETE" });
-      setCurrentView("shop");
-      setTimeout(() => setCurrentView("favorites"), 10);
+      /* Force re-mount to refresh data */
+      setActivePanel(null);
+      setTimeout(() => setActivePanel("favorites"), 10);
     } catch (error) {
       console.error("Error removing favorite:", error);
     }
@@ -66,7 +89,10 @@ export default function DashboardPage() {
 
   const handleCheckout = async () => {
     try {
-      const total = cartItems.reduce((acc, item) => acc + (item.productId?.price || 0) * item.quantity, 0);
+      const total = cartItems.reduce(
+        (acc, item) => acc + (item.productId?.price || 0) * item.quantity,
+        0
+      );
       const res = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,8 +101,7 @@ export default function DashboardPage() {
 
       if (res.ok) {
         setCartItems([]);
-        setIsCartOpen(false);
-        setCurrentView("history");
+        setActivePanel("history");
       }
     } catch (error) {
       console.error("Error during checkout:", error);
@@ -85,85 +110,98 @@ export default function DashboardPage() {
 
   const totalItemsInCart = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  return (
-    <div className="relative flex h-screen w-full bg-[#f6f6f6] text-[#111111] antialiased font-mono selection:bg-[#111111] selection:text-white">
-      
-      <aside className="w-64 border-r border-[#e5e5e5] p-6 flex flex-col justify-between bg-white select-none">
-        <div>
-          <div className="border-b border-[#111111] pb-4 mb-8">
-            <h1 className="text-sm font-black tracking-tighter uppercase text-[#111111]">
-              Mi Tienda
-            </h1>
-            <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-tight">Panel de Administración</p>
-          </div>
+  /* ── Navbar button helper ── */
+  const navBtnClass = (panel: FloatingPanel) =>
+    `px-4 py-2 text-[11px] font-bold uppercase tracking-wider border border-[#111] transition-all duration-100 select-none cursor-pointer ${
+      activePanel === panel
+        ? "bg-[#111] text-white"
+        : "bg-white text-[#111] hover:bg-[#111] hover:text-white"
+    }`;
 
-          <nav className="space-y-1">
-            <button 
-              onClick={() => setCurrentView("shop")}
-              className={`w-full text-left px-3 py-2 text-xs font-bold transition-all border ${currentView === "shop" ? "bg-[#111111] border-[#111111] text-white" : "border-transparent text-zinc-600 hover:bg-[#f6f6f6] hover:text-[#111111]"}`}
-            >
-              Catálogo
+  return (
+    <div className="relative min-h-screen w-full bg-[#f6f6f6] text-[#111] antialiased font-mono selection:bg-[#111] selection:text-white">
+
+      {/* ═══════════ STICKY TOP NAVBAR ═══════════ */}
+      <header
+        id="dashboard-navbar"
+        className="sticky top-0 z-50 w-full bg-white border-b-2 border-[#111] select-none"
+      >
+        <div className="max-w-1400px mx-auto px-6 h-14 flex items-center justify-between">
+          {/* Left: Brand */}
+          <h1 className="text-[11px] font-black tracking-widest uppercase text-[#111]">
+            DASHBOARD
+          </h1>
+
+          {/* Right: Nav buttons */}
+          <nav className="flex items-center gap-1px">
+            <button onClick={() => togglePanel("favorites")} className={navBtnClass("favorites")}>
+              FAVORITOS
             </button>
-            <button 
-              onClick={() => setCurrentView("favorites")}
-              className={`w-full text-left px-3 py-2 text-xs font-bold transition-all border ${currentView === "favorites" ? "bg-[#111111] border-[#111111] text-white" : "border-transparent text-zinc-600 hover:bg-[#f6f6f6] hover:text-[#111111]"}`}
-            >
-              Favoritos
+            <button onClick={() => togglePanel("history")} className={navBtnClass("history")}>
+              HISTORIAL DE TRANSACCIONES
             </button>
-            <button 
-              onClick={() => setCurrentView("history")}
-              className={`w-full text-left px-3 py-2 text-xs font-bold transition-all border ${currentView === "history" ? "bg-[#111111] border-[#111111] text-white" : "border-transparent text-zinc-600 hover:bg-[#f6f6f6] hover:text-[#111111]"}`}
-            >
-              Mis Pedidos
+            <button onClick={() => togglePanel("cart")} className={navBtnClass("cart")}>
+              CARRITO ({String(totalItemsInCart).padStart(2, "0")})
             </button>
           </nav>
         </div>
+      </header>
 
-        <button 
-          onClick={() => setIsCartOpen(!isCartOpen)}
-          className={`w-full py-2.5 px-3 text-xs font-bold border transition-all duration-150 flex justify-between items-center ${isCartOpen ? "bg-[#111111] text-white border-[#111111]" : "border-[#111111] bg-white hover:bg-[#111111] hover:text-white"}`}
+      {/* ═══════════ FLOATING PANELS ═══════════ */}
+      {activePanel && (
+        <div
+          ref={panelRef}
+          className={`absolute z-40 bg-white border-2 border-[#111] overflow-y-auto ${
+            activePanel === "cart"
+              ? "right-6 top-58px w-80 max-h-[80vh]"
+              : activePanel === "favorites"
+              ? "right-6 top-58px w-full max-w-2xl max-h-[80vh]"
+              : "right-6 top-58px w-full max-w-xl max-h-[80vh]"
+          }`}
         >
-          <span>🛒 Ver Carrito</span>
-          <span className={`px-2 py-0.5 text-[10px] font-bold border ${isCartOpen ? "bg-white text-[#111111] border-white" : "bg-[#111111] text-white border-[#111111]"}`}>
-            {String(totalItemsInCart).padStart(2, '0')}
-          </span>
-        </button>
-      </aside>
-
-      <main className="flex-1 overflow-y-auto p-8 flex flex-col">
-        
-        <div className="flex justify-between items-center border-b-2 border-[#111111] pb-4 mb-8">
-          <div className="flex space-x-4 items-center">
-            <span className="text-xs font-bold tracking-widest uppercase text-[#111111]">
-              {currentView === "shop" && "CATÁLOGO DE PRODUCTOS"}
-              {currentView === "favorites" && "TUS PRODUCTOS FAVORITOS"}
-              {currentView === "history" && "HISTORIAL DE PEDIDOS"}
+          {/* Panel header */}
+          <div className="sticky top-0 bg-white border-b-2 border-[#111] px-5 py-3 flex justify-between items-center z-10">
+            <span className="text-[11px] font-black uppercase tracking-widest">
+              {activePanel === "cart" && "CARRITO"}
+              {activePanel === "favorites" && "ITEMS FAVORITOS"}
+              {activePanel === "history" && "HISTORIAL DE TRANSACCIONES"}
             </span>
+            <button
+              onClick={() => setActivePanel(null)}
+              className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 hover:text-[#111] transition-colors cursor-pointer"
+            >
+              CERRAR
+            </button>
           </div>
-          <div className="flex space-x-2 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-            <span>Mostrando Todos</span>
-            <span>•</span>
-            <span>Ordenar por: Precio</span>
+
+          {/* Panel body */}
+          <div className="p-5">
+            {activePanel === "cart" && (
+              <CartDropdown
+                cartItems={cartItems}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveCartItem}
+                onCheckout={handleCheckout}
+              />
+            )}
+            {activePanel === "favorites" && (
+              <FavoritesList userId={MOCK_USER_ID} onRemoveFavorite={handleRemoveFavorite} />
+            )}
+            {activePanel === "history" && <OrderHistory userId={MOCK_USER_ID} />}
           </div>
         </div>
-
-        <div className="flex-1">
-          {currentView === "shop" && <ProductGrid onAddToCart={handleAddToCart} />}
-          {currentView === "favorites" && <FavoritesList userId={MOCK_USER_ID} onRemoveFavorite={handleRemoveFavorite} />}
-          {currentView === "history" && <OrderHistory userId={MOCK_USER_ID} />}
-        </div>
-      </main>
-
-      {isCartOpen && (
-        <CartDropdown 
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveCartItem}
-          onCheckout={handleCheckout}
-          onClose={() => setIsCartOpen(false)}
-        />
       )}
 
+      {/* ═══════════ PERMANENT CATALOGUE BACKGROUND ═══════════ */}
+      <main className="max-w-1400px mx-auto px-6 py-8">
+        <div className="flex justify-between items-center border-b-2 border-[#111] pb-4 mb-8">
+          <span className="text-[11px] font-black tracking-widest uppercase">
+            CATALOGO
+          </span>
+        </div>
+
+        <ProductGrid onAddToCart={handleAddToCart} />
+      </main>
     </div>
   );
 }
