@@ -26,7 +26,7 @@ export function useRegisterLogic() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "ERR_INITIALIZE_REGISTER_FAILED");
+        throw new Error(data.error || data.message || "No se pudo crear la cuenta");
       }
 
       router.push("/login");

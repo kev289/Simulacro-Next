@@ -25,11 +25,12 @@ export function useLoginLogic() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "ERR_EXECUTE_LOGIN_FAILED");
+        throw new Error(data.error || data.message || "No se pudo iniciar sesión");
       }
 
-      // Autenticación exitosa: va para el dashboard de una
-      router.push("/dashboard");
+      const params = new URLSearchParams(window.location.search);
+      const destino = params.get("redirect") || "/dashboard";
+      router.push(destino);
 
     } catch (err: any) {
       setError(err.message);

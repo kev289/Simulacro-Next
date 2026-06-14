@@ -35,6 +35,26 @@ export async function POST(req: Request) {
     }
 }
 
+export async function PATCH(req: Request) {
+    try {
+        await connectDB();
+        const { cartItemId, quantity } = await req.json();
+
+        if (!cartItemId || quantity == null) {
+            return NextResponse.json(
+                { message: "cartItemId y quantity son requeridos" },
+                { status: 400 }
+            );
+        }
+
+        const result = await CartService.updateItemQuantity(cartItemId, quantity);
+        return NextResponse.json({ message: "Cantidad actualizada", item: result }, { status: 200 });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Error al actualizar el carrito";
+        return NextResponse.json({ message }, { status: 400 });
+    }
+}
+
 export async function DELETE(req: Request) {
     try {
         await connectDB();

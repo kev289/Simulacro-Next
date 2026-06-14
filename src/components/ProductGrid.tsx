@@ -1,111 +1,125 @@
 "use client";
-import { useEffect, useState } from "react";
 
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  image?: string;
-}
+import { useEffect, useState } from "react";
+import { ProductCard, type Producto } from "@/src/components/ProductCard";
+import { EstadoCarga } from "@/src/components/EstadoCarga";
+import { useTraduccion } from "@/src/contexts/I18nProvider";
 
 interface ProductGridProps {
-  onAddToCart: (productId: string) => void;
+  userId?: string;
+  onAddToCart?: (productId: string) => void;
+  onRequireAuth?: () => void;
+  actualizarEn?: number;
 }
 
-export function ProductGrid({ onAddToCart }: ProductGridProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+export function ProductGrid({
+  userId,
+  onAddToCart,
+  onRequireAuth,
+  actualizarEn = 0,
+}: ProductGridProps) {
+  const { t } = useTraduccion();
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sincronizandoFav, setSincronizandoFav] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchProducts() {
+    async function cargarProductos() {
+      setCargando(true);
+      setError(null);
       try {
         const res = await fetch("/api/products");
         const data = await res.json();
-        setProducts(data.products || data);
-      } catch (error) {
-        console.error("Error al cargar productos:", error);
+        if (!res.ok) throw new Error(t.errorCarga);
+        setProductos(data.products || data);
+      } catch {
+        setError(t.errorCarga);
       } finally {
-        setLoading(false);
+        setCargando(false);
       }
     }
-    fetchProducts();
-  }, []);
+    cargarProductos();
+  }, [t.errorCarga, actualizarEn]);
 
-  if (loading) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 animate-pulse">
-          CARGANDO DATOS
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    async function cargarFavoritos() {
+      if (!userId) {
+        setFavoritos(new Set());
+        return;
+      }
+      try {
+        const res = await fetch(`/api/favorites?userId=${userId}`);
+        const data = await res.json();
+        if (res.ok) {
+          const ids = (data.favorites || []).map(
+            (fav: { productId: { _id: string } | string }) =>
+              typeof fav.productId === "string"
+                ? fav.productId
+                : fav.productId?._id
+          );
+          setFavoritos(new Set(ids.filter(Boolean)));
+        }
+      } catch {
+        /* catálogo sigue visible */
+      }
+    }
+    cargarFavoritos();
+  }, [userId]);
 
-  if (products.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
-          DATOS NO ENCONTRADOS
-        </p>
-      </div>
-    );
-  }
+  const manejarFavorito = async (productoId: string) => {
+    if (!userId) {
+      onRequireAuth?.();
+      return;
+    }
+
+    setSincronizandoFav(productoId);
+    try {
+      const res = await fetch("/api/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, productId: productoId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(t.errorCarga);
+
+      setFavoritos((prev) => {
+        const siguiente = new Set(prev);
+        if (data.action === "added") siguiente.add(productoId);
+        else siguiente.delete(productoId);
+        return siguiente;
+      });
+    } catch {
+      setError(t.errorCarga);
+    } finally {
+      setSincronizandoFav(null);
+    }
+  };
+
+  const manejarCarrito = (productoId: string) => {
+    if (!userId) {
+      onRequireAuth?.();
+      return;
+    }
+    onAddToCart?.(productoId);
+  };
+
+  if (cargando) return <EstadoCarga mensaje={t.cargando} tipo="sincronizando" />;
+  if (error) return <EstadoCarga mensaje={error} tipo="error" />;
+  if (productos.length === 0) return <EstadoCarga mensaje={t.sinProductos} />;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[#e5e5e5]">
-      {products.map((product) => (
-        <div
-          key={product._id}
-          className="bg-white p-5 flex flex-col justify-between group"
-        >
-          {/* Image */}
-          <div>
-            <div className="w-full h-44 bg-[#f6f6f6] border border-[#e5e5e5] mb-4 flex items-center justify-center overflow-hidden group-hover:border-[#111] transition-colors">
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-[10px] text-zinc-400 uppercase tracking-wider">
-                  SIN IMAGEN
-                </span>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="flex justify-between items-start mb-1">
-              <h3 className="text-sm font-black text-[#111] uppercase tracking-tight leading-tight">
-                {product.name}
-              </h3>
-              <span className="text-sm font-black text-[#111] ml-3 whitespace-nowrap">
-                ${product.price.toFixed(2)}
-              </span>
-            </div>
-            <p className="text-[11px] text-zinc-500 line-clamp-2 mb-4 leading-relaxed">
-              {product.description}
-            </p>
-          </div>
-
-          {/* Footer */}
-          <div className="pt-3 border-t border-[#e5e5e5]">
-            <div className="flex justify-between text-[10px] text-zinc-400 mb-3 font-bold uppercase tracking-widest">
-              <span>STOCK: {String(product.stock).padStart(3, "0")}</span>
-              <span>REF: {product._id.substring(0, 8)}</span>
-            </div>
-
-            <button
-              onClick={() => onAddToCart(product._id)}
-              disabled={product.stock <= 0}
-              className="w-full py-2.5 bg-[#111] border border-[#111] text-white text-[11px] font-bold uppercase tracking-widest transition-all duration-100 hover:bg-white hover:text-[#111] disabled:opacity-30 disabled:hover:bg-[#111] disabled:hover:text-white cursor-pointer"
-            >
-              {product.stock > 0 ? "AÑADIR AL CARRITO" : "SIN STOCK"}
-            </button>
-          </div>
-        </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {productos.map((producto) => (
+        <ProductCard
+          key={producto._id}
+          producto={producto}
+          esFavorito={favoritos.has(producto._id)}
+          alAlternarFavorito={manejarFavorito}
+          alAnadirCarrito={manejarCarrito}
+          deshabilitarFavorito={sincronizandoFav === producto._id}
+        />
       ))}
     </div>
   );

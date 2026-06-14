@@ -1,15 +1,19 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import { EstadoCarga } from "@/src/components/EstadoCarga";
+import { useTraduccion } from "@/src/contexts/I18nProvider";
+
+interface ProductoFavorito {
+  _id: string;
+  name: string;
+  price: number;
+  image?: string;
+}
 
 interface FavoriteItem {
   _id: string;
-  productId: {
-    _id: string;
-    name: string;
-    description: string;
-    price: number;
-    image?: string;
-  };
+  productId: ProductoFavorito | null;
 }
 
 interface FavoritesListProps {
@@ -18,8 +22,10 @@ interface FavoritesListProps {
 }
 
 export function FavoritesList({ userId, onRemoveFavorite }: FavoritesListProps) {
+  const { t } = useTraduccion();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchFavorites() {
@@ -27,68 +33,56 @@ export function FavoritesList({ userId, onRemoveFavorite }: FavoritesListProps) 
       try {
         const res = await fetch(`/api/favorites?userId=${userId}`);
         const data = await res.json();
-        setFavorites(data.favorites || data);
-      } catch (error) {
-        console.error("Error al cargar favoritos:", error);
+        if (!res.ok) throw new Error(t.errorCarga);
+        setFavorites(data.favorites || []);
+      } catch {
+        setError(t.errorCarga);
       } finally {
         setLoading(false);
       }
     }
     fetchFavorites();
-  }, [userId]);
+  }, [userId, t.errorCarga]);
 
-  if (loading) {
-    return (
-      <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold animate-pulse py-6 text-center">
-        DECRYPTING_FAVORITES...
-      </p>
-    );
-  }
-
-  if (favorites.length === 0) {
-    return (
-      <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold py-6 text-center">
-        ITEMS NO GUARDADOS
-      </p>
-    );
-  }
+  if (loading) return <EstadoCarga mensaje={t.sincronizando} tipo="sincronizando" />;
+  if (error) return <EstadoCarga mensaje={error} tipo="error" />;
+  if (favorites.length === 0) return <EstadoCarga mensaje={t.sinFavoritos} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 bg-[#e5e5e5]">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {favorites.map((fav) => {
         const product = fav.productId;
         if (!product) return null;
+        const precio = typeof product.price === "number" ? product.price : 0;
 
         return (
-          <div key={fav._id} className="bg-white p-4 flex flex-col justify-between">
-            <div>
-              <div className="w-full h-28 bg-[#f6f6f6] border border-[#e5e5e5] mb-3 flex items-center justify-center overflow-hidden">
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-wider">
-                    SIN IMAGEN
-                  </span>
-                )}
-              </div>
-              <h3 className="text-[12px] font-black text-[#111] uppercase tracking-tight mb-1">
-                {product.name}
-              </h3>
-              <span className="text-[11px] font-bold text-zinc-500">
-                ${product.price.toFixed(2)}
-              </span>
+          <div
+            key={fav._id}
+            className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200"
+          >
+            <div className="w-16 h-16 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0">
+              {product.image ? (
+                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">
+                  —
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={() => onRemoveFavorite(fav._id)}
-              className="w-full mt-4 py-2 border border-[#111] bg-white text-[#111] text-[10px] font-bold uppercase tracking-widest transition-all duration-100 hover:bg-[#111] hover:text-white cursor-pointer"
-            >
-              ELIMINAR
-            </button>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-slate-800 truncate">{product.name}</h3>
+              <p className="text-sm font-semibold text-indigo-600 mt-1">
+                ${precio.toFixed(2)}
+              </p>
+              <button
+                type="button"
+                onClick={() => onRemoveFavorite(fav._id)}
+                className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium cursor-pointer"
+              >
+                {t.eliminar}
+              </button>
+            </div>
           </div>
         );
       })}

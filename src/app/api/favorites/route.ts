@@ -30,3 +30,20 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Error", error }, { status: 500 });
     }
 }
+
+export async function DELETE(req: Request) {
+    try {
+        await connectDB();
+        const { searchParams } = new URL(req.url);
+        const favId = searchParams.get("favId");
+
+        if (!favId) {
+            return NextResponse.json({ message: "favId es requerido" }, { status: 400 });
+        }
+
+        const result = await FavoriteService.removeFavorite(favId);
+        return NextResponse.json({ message: "Favorito eliminado", result }, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ message: "Error", error }, { status: 500 });
+    }
+}

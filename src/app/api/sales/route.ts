@@ -22,13 +22,13 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         await connectDB();
-        const { userId, total } = await req.json();
+        const { userId } = await req.json();
 
-        if (!userId || !total) {
-            return NextResponse.json({ message: "Id y total son requeridos" }, { status: 400 });
+        if (!userId) {
+            return NextResponse.json({ message: "Id de usuario es requerido" }, { status: 400 });
         }
 
-        const newSale = await SaleService.createSale(userId, total);
+        const newSale = await SaleService.createSale(userId);
         return NextResponse.json({ message: "Compra realizada con éxito", newSale }, { status: 201 });
     } catch (error: any) {
         return NextResponse.json({ message: error.message || "Error al procesar la venta", error }, { status: 500 });
