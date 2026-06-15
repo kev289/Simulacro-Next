@@ -26,3 +26,7 @@ A continuación, se presenta la estructura de directorios principal de la aplica
 ```
 
 ---
+
+## Progreso
+
+- Me falta terminar unos detalles del frontend, y hacer el envio de correos electronicos cada cierto tiempo, usando Nodemailer y CronJobs.
