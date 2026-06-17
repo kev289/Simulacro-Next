@@ -29,3 +29,8 @@ A continuación, se presenta la estructura de directorios principal de la aplica
 
 ## Ejemplo de .ENV
 
+MONGODB_URI
+JWT_SECRET
+JWT_REFRESH_SECRET
+EMAIL_USER
+EMAIL_PASS
