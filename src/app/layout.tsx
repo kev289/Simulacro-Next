@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { I18nProvider } from "@/src/contexts/I18nProvider";
 
@@ -22,7 +23,13 @@ export default function RootLayout({
     <html lang="es" className={`${geistSans.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-[#f6f6f6] text-slate-800 antialiased">
         <I18nProvider>{children}</I18nProvider>
+        
+        {/* SDK Oficial de Google Identity Services */}
+        <Script 
+          src="https://accounts.google.com/gsi/client" 
+          strategy="lazyOnload" 
+        />
       </body>
     </html>
   );
-}
+} 
