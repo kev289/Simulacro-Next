@@ -1,36 +1,188 @@
-# Simulacro E-Commerce
+# E-Commerce
 
-Este proyecto es una aplicación **e-commerce** desarrollada con **Next.js**. Incluye funcionalidades como catálogo de productos, carrito de compras, sistema de favoritos, autenticación de usuarios, internacionalización (i18n), integración con base de datos (MongoDB) y tareas programadas para el envío de correos electrónicos.
+## Description
 
-## Estructura del Proyecto
+E-Commerce is a full-stack e-commerce application built with Next.js. The project includes a product catalog, shopping cart, favorites system, user authentication, internationalization (i18n), MongoDB integration, and an automated email system powered by cron jobs.
 
-A continuación, se presenta la estructura de directorios principal de la aplicación, siguiendo la arquitectura de capas y el App Router de Next.js:
+The application follows a layered architecture that separates business logic, database access, API routes, and UI components, making the codebase easier to maintain and scale.
+
+---
+
+## Project Structure
 
 ```text
-.
-├── public/                # Archivos estáticos e imágenes (SVG, ICO, etc.)
-├── src/
-│   ├── app/               # Rutas de la aplicación (App Router) y API Routes
-│   │   ├── api/           # Endpoints de la API
-│   │   ├── dashboard/     # Vistas del panel de control
-│   │   ├── layout.tsx     # Layout principal
-│   │   └── page.tsx       # Página de inicio (Catálogo)
-│   ├── components/        # Componentes UI reutilizables (ej. ProductCard)
-│   ├── lib/               # Utilidades, configuración de MongoDB y Autenticación
-│   ├── models/            # Modelos de datos de Mongoose (Cart, Favorite, Product, Sale, User)
-│   ├── services/          # Capa de servicios separada de las rutas (comunicación con DB)
-│   └── types/             # Definiciones de tipos e interfaces de TypeScript
-├── package.json           # Dependencias y scripts del proyecto
-├── SIMULACRO_PRUEBA_DESEMPENO.md # Requisitos originales de la prueba
-└── README.md              # Documentación del proyecto
+src/
+├── app/
+│   ├── api/
+│   ├── dashboard/
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│
+├── lib/
+│   ├── auth.ts
+│   ├── cron.ts
+│   ├── mongodb.ts
+│   ├── require-auth.ts
+│   └── validations.ts
+│
+├── models/
+│   ├── Cart.ts
+│   ├── Favorite.ts
+│   ├── Product.ts
+│   ├── Sale.ts
+│   └── User.ts
+│
+├── services/
+│   ├── cart.service.ts
+│   ├── favorite.service.ts
+│   ├── mail.service.ts
+│   ├── product.service.ts
+│   ├── sale.service.ts
+│   └── user.service.ts
+│
+└── types/
+```
+---
+
+## Features
+
+### Product Catalog
+
+* Browse available products from MongoDB.
+* Server-side data handling using Next.js.
+* Structured product models and service layer architecture.
+
+### Shopping Cart & Favorites
+
+* Add and remove products from the shopping cart.
+* Save products to a favorites list.
+* Separate services for cart and favorites management.
+
+### Authentication
+
+* User registration and login.
+* JWT-based authentication.
+* Protected routes using custom authentication utilities.
+
+### Internationalization (i18n)
+
+* Multi-language support.
+* Language-aware user experience across the application.
+
+### Automated Email System
+
+* Scheduled email delivery using cron jobs.
+* Reads users directly from the database and sends automated emails.
+* Includes a strict global interface lock inside `mongodb.ts` to prevent duplicate cronjob execution during Next.js hot reloads and development server restarts.
+* Centralized email handling through the mail service layer.
+
+### Database Integration
+
+* MongoDB with Mongoose models.
+* Dedicated models for:
+
+  * Cart
+  * Favorite
+  * Product
+  * Sale
+  * User
+
+### Service Layer Architecture
+
+* Business logic is separated from API routes.
+* Dedicated services for products, users, sales, cart management, favorites, and email operations.
+* Improves maintainability and scalability.
+
+---
+
+## Environment Variables
+
+```env
+MONGODB_URI=
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+EMAIL_USER=
+EMAIL_PASS=
 ```
 
 ---
 
-## Ejemplo de .ENV
+## How to Run
 
-MONGODB_URI
-JWT_SECRET
-JWT_REFRESH_SECRET
-EMAIL_USER
-EMAIL_PASS
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd simulacro-ecommerce
+```
+
+### 2. Install dependencies
+
+```bash
+bun install
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file in the project root and add the required variables:
+
+```env
+MONGODB_URI=
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+EMAIL_USER=
+EMAIL_PASS=
+```
+
+### 4. Start the development server
+
+```bash
+bun dev
+```
+
+The application will be available at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## Tech Stack
+
+* Next.js
+* React
+* TypeScript
+* MongoDB
+* Mongoose
+* JWT Authentication
+* Bun
+* Cron Jobs
+* Nodemailer
+* i18n
+
+---
+
+## Architecture Overview
+
+The project follows a layered architecture:
+
+```text
+UI Components
+      │
+      ▼
+API Routes
+      │
+      ▼
+Services
+      │
+      ▼
+Mongoose Models
+      │
+      ▼
+MongoDB
+```
+
+This separation helps keep controllers lightweight, business logic centralized, and database operations organized.
