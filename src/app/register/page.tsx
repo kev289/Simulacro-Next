@@ -1,76 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useRegisterLogic } from "@/src/hooks/useRegisterLogic";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
 import { BarraNavegacion } from "@/src/components/BarraNavegacion";
 import { useAuth } from "@/src/hooks/useAuth";
+import { BotonGoogle } from "@/src/components/BotonGoogle"; // <-- Importamos tu componente reutilizable
 import { Mail, Lock, UserPlus, User, AlertCircle } from "lucide-react";
 
 export default function RegisterPage() {
-  const { handleRegisterSubmit, loading, error: registerError } = useRegisterLogic();
+  const { handleRegisterSubmit, loading, error } = useRegisterLogic();
   const { usuario, cargando } = useAuth();
   const { t, idioma } = useTraduccion();
-  const router = useRouter();
-  
-  // Estado local por si falla la autenticación de Google en el backend
-  const [googleError, setGoogleError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Definimos el callback global que llamará Google al loguearse con éxito
-    const handleGoogleResponse = async (response: any) => {
-      try {
-        setGoogleError(null);
-        
-        // El response.credential contiene el JWT encriptado firmado por Google
-        const res = await fetch("/api/auth/google", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token: response.credential }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.message || "Error al autenticar con Google");
-        }
-
-        // Si el backend responde OK, redirigimos al home o dashboard
-        router.refresh();
-        router.push(`/${idioma}`);
-      } catch (err: any) {
-        setGoogleError(err.message || "Hubo un problema con la autenticación");
-      }
-    };
-
-    // Inicializamos Google Identity Services cuando el script del layout esté cargado
-    if (typeof window !== "undefined" && (window as any).google) {
-      const google = (window as any).google;
-
-      google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleResponse,
-      });
-
-      // Renderizamos el botón nativo dentro del contenedor con ID 'googleBtn'
-      google.accounts.id.renderButton(
-        document.getElementById("googleBtn"),
-        { 
-          theme: "outline", 
-          size: "large", 
-          text: "signup_with", // Ajusta el texto automáticamente a registrarse
-          width: "100%",
-          shape: "rectangular"
-        }
-      );
-    }
-  }, [router, idioma]);
-
-  const activeError = registerError || googleError;
 
   return (
     <div className="min-h-screen bg-[#f6f6f6] flex flex-col">
@@ -87,9 +28,9 @@ export default function RegisterPage() {
               <p className="text-sm text-slate-500 mt-1">Crea tu cuenta en segundos.</p>
             </div>
 
-            {activeError && (
+            {error && (
               <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
-                <AlertCircle size={16} className="shrink-0" /> {activeError}
+                <AlertCircle size={16} className="shrink-0" /> {error}
               </div>
             )}
 
@@ -156,7 +97,6 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            {/* Separador Visual */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200"></div>
@@ -166,8 +106,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Contenedor donde Google va a inyectar el botón nativo */}
-            <div id="googleBtn" className="w-full flex justify-center min-h-44px"></div>
+            <BotonGoogle />
 
             <p className="mt-6 text-center text-sm text-slate-500">
               ¿Ya tienes cuenta?{" "}
