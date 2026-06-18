@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+function getIdioma(): string {
+  if (typeof document === "undefined") return "es";
+  const match = document.cookie.match(/(?:^|;\s*)lang=(es|en|pt)/);
+  return match?.[1] || "es";
+}
+
 export interface UsuarioSesion {
   userId: string;
   name: string;
@@ -41,12 +47,12 @@ export function useAuth() {
   const cerrarSesion = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUsuario(null);
-    router.push("/login");
+    router.push(`/${getIdioma()}/login`);
   };
 
   const requiereSesion = (mensaje?: string) => {
     if (!usuario) {
-      router.push("/login");
+      router.push(`/${getIdioma()}/login`);
       return false;
     }
     if (mensaje) setError(mensaje);

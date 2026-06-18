@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
+import { Heart, ShoppingCart, Eye } from "lucide-react";
 
 export interface Producto {
   _id: string;
@@ -30,7 +31,7 @@ export function ProductCard({
   mostrarDetalle = true,
   deshabilitarFavorito = false,
 }: ProductCardProps) {
-  const { t } = useTraduccion();
+  const { t, idioma } = useTraduccion();
   const precio = typeof producto.price === "number" ? producto.price : 0;
 
   return (
@@ -54,9 +55,12 @@ export function ProductCard({
             onClick={() => alAlternarFavorito(producto._id)}
             disabled={deshabilitarFavorito}
             aria-label={t.favoritos}
-            className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur rounded-full shadow flex items-center justify-center text-lg hover:scale-110 transition-transform cursor-pointer disabled:opacity-50"
+            className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur rounded-full shadow flex items-center justify-center hover:scale-110 transition-transform cursor-pointer disabled:opacity-50"
           >
-            {esFavorito ? "❤️" : "🤍"}
+            <Heart
+              size={18}
+              className={esFavorito ? "fill-red-500 text-red-500" : "text-slate-400"}
+            />
           </button>
         )}
       </div>
@@ -80,9 +84,10 @@ export function ProductCard({
         <div className="flex flex-col gap-2">
           {mostrarDetalle && (
             <Link
-              href={`/products/${producto._id}`}
-              className="w-full py-2.5 text-center text-sm font-medium text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors"
+              href={`/${idioma}/products/${producto._id}`}
+              className="w-full py-2.5 text-center text-sm font-medium text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
             >
+              <Eye size={15} />
               {t.verDetalle}
             </Link>
           )}
@@ -92,8 +97,9 @@ export function ProductCard({
               type="button"
               onClick={() => alAnadirCarrito(producto._id)}
               disabled={producto.stock <= 0}
-              className="w-full py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className="w-full py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center gap-2"
             >
+              <ShoppingCart size={15} />
               {producto.stock > 0 ? t.anadirCarrito : t.sinStock}
             </button>
           )}

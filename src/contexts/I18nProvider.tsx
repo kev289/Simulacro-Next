@@ -15,6 +15,21 @@ import {
   type Traducciones,
 } from "@/src/i18n/dictionaries";
 
+function getIdiomaInicial(): Idioma {
+  if (typeof document === "undefined") return "es";
+  const cookies = document.cookie.split("; ").reduce(
+    (acc, c) => {
+      const [k, v] = c.split("=");
+      acc[k] = v;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+  const deCookie = cookies.lang as Idioma | undefined;
+  if (deCookie && diccionarios[deCookie]) return deCookie;
+  return "es";
+}
+
 interface I18nContextValue {
   idioma: Idioma;
   t: Traducciones;
@@ -28,15 +43,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [idioma, setIdioma] = useState<Idioma>("es");
 
   useEffect(() => {
-    const guardado = localStorage.getItem("idioma") as Idioma | null;
-    if (guardado && diccionarios[guardado]) {
-      setIdioma(guardado);
-    }
+    setIdioma(getIdiomaInicial());
   }, []);
 
   const cambiarIdioma = useCallback((nuevo: Idioma) => {
     setIdioma(nuevo);
-    localStorage.setItem("idioma", nuevo);
+    document.cookie = `lang=${nuevo}; path=/; SameSite=Strict`;
   }, []);
 
   const value = useMemo(

@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('Error en la variable de entorno');
+function getMongoUri(): string {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('MONGODB_URI no está configurada. Verifica el archivo .env o las variables de entorno del contenedor.');
+  }
+  return uri;
 }
 
 type MongooseCache = {
@@ -32,7 +34,7 @@ async function connectDB() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((m) => {
+    cached.promise = mongoose.connect(getMongoUri(), opts).then((m) => {
       return m;
     });
   }

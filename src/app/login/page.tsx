@@ -3,75 +3,90 @@
 import Link from "next/link";
 import { useLoginLogic } from "@/src/hooks/useLoginLogic";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
-import { SelectorIdioma } from "@/src/components/SelectorIdioma";
+import { BarraNavegacion } from "@/src/components/BarraNavegacion";
+import { useAuth } from "@/src/hooks/useAuth";
+import { Mail, Lock, LogIn, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const { handleLoginSubmit, loading, error } = useLoginLogic();
-  const { t } = useTraduccion();
+  const { usuario, cargando } = useAuth();
+  const { t, idioma } = useTraduccion();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-bold">
-            T
-          </span>
-          <span className="font-semibold text-slate-800">{t.marca}</span>
-        </Link>
-        <SelectorIdioma />
-      </header>
+    <div className="min-h-screen bg-[#f6f6f6] flex flex-col">
+      <BarraNavegacion usuario={usuario} cargando={cargando} />
 
       <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">{t.iniciarSesion}</h1>
-          <p className="text-sm text-slate-500 mb-8">Accede a tu cuenta para comprar y guardar favoritos.</p>
-
-          {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t.correo}
-              </label>
-              <input
-                type="email"
-                name="email"
-                required
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto mb-4">
+                <LogIn size={28} />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-800">{t.iniciarSesion}</h1>
+              <p className="text-sm text-slate-500 mt-1">Accede a tu cuenta para comprar y guardar favoritos.</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t.contrasena}
-              </label>
-              <input
-                type="password"
-                name="password"
-                required
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" /> {error}
+              </div>
+            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer"
-            >
-              {loading ? t.entrando : t.iniciarSesion}
-            </button>
-          </form>
+            <form onSubmit={handleLoginSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {t.correo}
+                </label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autoComplete="email"
+                    className="w-full border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                  />
+                </div>
+              </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            ¿No tienes cuenta?{" "}
-            <Link href="/register" className="text-indigo-600 font-medium hover:text-indigo-800">
-              {t.registrarse}
-            </Link>
-          </p>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {t.contrasena}
+                </label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    autoComplete="current-password"
+                    className="w-full border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <LogIn size={16} />
+                )}
+                {loading ? t.entrando : t.iniciarSesion}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-slate-500">
+              ¿No tienes cuenta?{" "}
+              <Link href={`/${idioma}/register`} className="text-indigo-600 font-medium hover:text-indigo-800">
+                {t.registrarse}
+              </Link>
+            </p>
+          </div>
         </div>
       </main>
     </div>

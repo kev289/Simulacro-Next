@@ -1,6 +1,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+function getIdioma(): string {
+  if (typeof document === "undefined") return "es";
+  const match = document.cookie.match(/(?:^|;\s*)lang=(es|en|pt)/);
+  return match?.[1] || "es";
+}
+
 export function useRegisterLogic() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -29,7 +35,7 @@ export function useRegisterLogic() {
         throw new Error(data.error || data.message || "No se pudo crear la cuenta");
       }
 
-      router.push("/login");
+      router.push(`/${getIdioma()}/login`);
       
     } catch (err: any) {
       setError(err.message);

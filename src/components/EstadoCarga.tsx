@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2, AlertCircle, Package } from "lucide-react";
+
 interface EstadoCargaProps {
   mensaje: string;
   tipo?: "carga" | "error" | "sincronizando";
@@ -9,12 +11,15 @@ export function EstadoCarga({ mensaje, tipo = "carga" }: EstadoCargaProps) {
   return (
     <div className="py-16 text-center">
       {tipo === "sincronizando" && (
-        <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+        <Loader2 size={28} className="animate-spin mx-auto mb-4 text-indigo-500" />
       )}
       {tipo === "error" && (
-        <div className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4 text-lg">
-          !
+        <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle size={24} />
         </div>
+      )}
+      {tipo === "carga" && (
+        <Package size={28} className="mx-auto mb-4 text-slate-300" />
       )}
       <p
         className={`text-sm ${

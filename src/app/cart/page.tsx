@@ -7,6 +7,7 @@ import { BarraNavegacion } from "@/src/components/BarraNavegacion";
 import { EstadoCarga } from "@/src/components/EstadoCarga";
 import { useRequireAuth } from "@/src/hooks/useRequireAuth";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
+import { ArrowLeft, ShoppingCart } from "lucide-react";
 
 interface CartItem {
   _id: string;
@@ -16,7 +17,7 @@ interface CartItem {
 
 export default function CartPage() {
   const { usuario, cargando: cargandoSesion, error: errorSesion } = useRequireAuth();
-  const { t } = useTraduccion();
+  const { t, idioma } = useTraduccion();
   const [items, setItems] = useState<CartItem[]>([]);
   const [cargando, setCargando] = useState(true);
   const [procesando, setProcesando] = useState(false);
@@ -87,14 +88,32 @@ export default function CartPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <BarraNavegacion usuario={usuario} cargando={cargandoSesion} mostrarPanel />
+  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
-      <main className="max-w-lg mx-auto px-4 sm:px-6 py-10">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">{t.panelCarrito}</h1>
-          <Link href="/dashboard" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+  return (
+    <div className="min-h-screen bg-[#f6f6f6]">
+      <BarraNavegacion
+        usuario={usuario}
+        cargando={cargandoSesion}
+        mostrarPanel
+      />
+
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <ShoppingCart size={24} className="text-indigo-600" />
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">{t.panelCarrito}</h1>
+              <p className="text-sm text-slate-500 mt-0.5">
+                {totalItems > 0 ? `${totalItems} producto${totalItems !== 1 ? "s" : ""}` : t.carritoVacio}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={`/${idioma}/dashboard`}
+            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+          >
+            <ArrowLeft size={14} />
             {t.irPanel}
           </Link>
         </div>

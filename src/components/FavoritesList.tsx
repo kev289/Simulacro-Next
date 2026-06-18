@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { EstadoCarga } from "@/src/components/EstadoCarga";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
+import { Heart, Trash2 } from "lucide-react";
 
 interface ProductoFavorito {
   _id: string;
@@ -46,7 +47,14 @@ export function FavoritesList({ userId, onRemoveFavorite }: FavoritesListProps) 
 
   if (loading) return <EstadoCarga mensaje={t.sincronizando} tipo="sincronizando" />;
   if (error) return <EstadoCarga mensaje={error} tipo="error" />;
-  if (favorites.length === 0) return <EstadoCarga mensaje={t.sinFavoritos} />;
+  if (favorites.length === 0) {
+    return (
+      <div className="py-16 text-center">
+        <Heart size={40} className="mx-auto text-slate-300 mb-4" />
+        <p className="text-sm text-slate-500">{t.sinFavoritos}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -58,9 +66,9 @@ export function FavoritesList({ userId, onRemoveFavorite }: FavoritesListProps) 
         return (
           <div
             key={fav._id}
-            className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200"
+            className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-slate-300 transition-colors"
           >
-            <div className="w-16 h-16 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0">
+            <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 overflow-hidden shrink-0">
               {product.image ? (
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
               ) : (
@@ -78,8 +86,9 @@ export function FavoritesList({ userId, onRemoveFavorite }: FavoritesListProps) 
               <button
                 type="button"
                 onClick={() => onRemoveFavorite(fav._id)}
-                className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium cursor-pointer"
+                className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium cursor-pointer flex items-center gap-1"
               >
+                <Trash2 size={12} />
                 {t.eliminar}
               </button>
             </div>

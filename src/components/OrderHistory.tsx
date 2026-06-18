@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { EstadoCarga } from "@/src/components/EstadoCarga";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
+import { Clock, Receipt, ChevronRight } from "lucide-react";
 
 interface SaleProduct {
   productName?: string;
@@ -47,22 +48,33 @@ export function OrderHistory({ userId }: OrderHistoryProps) {
 
   if (loading) return <EstadoCarga mensaje={t.sincronizando} tipo="sincronizando" />;
   if (error) return <EstadoCarga mensaje={error} tipo="error" />;
-  if (sales.length === 0) return <EstadoCarga mensaje={t.sinVentas} />;
+  if (sales.length === 0) {
+    return (
+      <div className="py-16 text-center">
+        <Receipt size={40} className="mx-auto text-slate-300 mb-4" />
+        <p className="text-sm text-slate-500">{t.sinVentas}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {sales.map((sale) => (
-        <div key={sale._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-sm font-medium text-slate-800">
-              {t.recibo} #{sale._id.slice(-6).toUpperCase()}
-            </span>
-            <span className="text-xs text-slate-500">
+        <div key={sale._id} className="p-5 bg-slate-50 rounded-xl border border-slate-200 hover:border-slate-300 transition-colors">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <Receipt size={16} className="text-indigo-500" />
+              <span className="text-sm font-medium text-slate-800">
+                {t.recibo} #{sale._id.slice(-6).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Clock size={12} />
               {new Date(sale.createdAt).toLocaleDateString()}
-            </span>
+            </div>
           </div>
 
-          <div className="space-y-1 mb-3">
+          <div className="space-y-2 mb-4">
             {sale.products?.map((p, idx) => {
               const nombre =
                 p.productName ??
@@ -75,18 +87,22 @@ export function OrderHistory({ userId }: OrderHistoryProps) {
 
               return (
                 <div key={idx} className="flex justify-between text-sm text-slate-600">
-                  <span>
-                    {nombre} × {p.quantity}
+                  <span className="truncate mr-4">
+                    {nombre}
+                    <span className="text-slate-400 ml-1">× {p.quantity}</span>
                   </span>
-                  <span>${(precio * p.quantity).toFixed(2)}</span>
+                  <span className="font-medium whitespace-nowrap">${(precio * p.quantity).toFixed(2)}</span>
                 </div>
               );
             })}
           </div>
 
           <div className="flex justify-between items-center pt-3 border-t border-slate-200">
-            <span className="text-xs text-emerald-600 font-medium">{t.estadoCompletado}</span>
-            <span className="font-bold text-slate-800">${sale.total.toFixed(2)}</span>
+            <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+              <ChevronRight size={12} />
+              {t.estadoCompletado}
+            </span>
+            <span className="font-bold text-slate-800 text-lg">${sale.total.toFixed(2)}</span>
           </div>
         </div>
       ))}

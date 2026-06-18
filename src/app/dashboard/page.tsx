@@ -10,18 +10,25 @@ import { BarraNavegacion } from "@/src/components/BarraNavegacion";
 import { EstadoCarga } from "@/src/components/EstadoCarga";
 import { useRequireAuth } from "@/src/hooks/useRequireAuth";
 import { useTraduccion } from "@/src/contexts/I18nProvider";
+import {
+  LayoutGrid,
+  Heart,
+  Clock,
+  ShoppingCart,
+  X,
+} from "lucide-react";
 
 type PanelFlotante = "favoritos" | "historial" | "carrito" | null;
 
 interface CartItem {
   _id: string;
-  productId: { price: number };
+  productId: { price: number; name: string; image?: string };
   quantity: number;
 }
 
 export default function DashboardPage() {
   const { usuario, cargando: cargandoSesion, error: errorSesion, cerrarSesion } = useRequireAuth();
-  const { t } = useTraduccion();
+  const { t, idioma } = useTraduccion();
   const [panelActivo, setPanelActivo] = useState<PanelFlotante>(null);
   const [itemsCarrito, setItemsCarrito] = useState<CartItem[]>([]);
   const [cargandoCarrito, setCargandoCarrito] = useState(false);
@@ -151,19 +158,22 @@ export default function DashboardPage() {
 
   const totalItemsInCart = itemsCarrito.reduce((acc, item) => acc + item.quantity, 0);
 
-  const btnPanel = (panel: PanelFlotante, etiqueta: string, icono: string) => (
+  const btnPanel = (panel: PanelFlotante, etiqueta: string, icono: React.ReactNode) => (
     <button
       type="button"
       onClick={() => togglePanel(panel)}
-      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+      className={`px-3 py-2 text-sm font-medium rounded-xl transition-colors cursor-pointer flex items-center gap-2 ${
         panelActivo === panel
-          ? "bg-indigo-600 text-white"
-          : "text-slate-600 hover:bg-slate-100"
+          ? "bg-indigo-600 text-white shadow-sm"
+          : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
       }`}
     >
-      {icono} {etiqueta}
+      {icono}
+      <span className="hidden sm:inline">{etiqueta}</span>
       {panel === "carrito" && totalItemsInCart > 0 && (
-        <span className="ml-1 text-xs bg-white/20 px-1.5 rounded-full">
+        <span className={`text-xs px-1.5 rounded-full ${
+          panelActivo === "carrito" ? "bg-white/20" : "bg-indigo-100 text-indigo-600"
+        }`}>
           {totalItemsInCart}
         </span>
       )}
@@ -179,16 +189,16 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-50">
+    <div className="relative min-h-screen bg-[#f6f6f6]">
       <BarraNavegacion
         usuario={usuario}
         alCerrarSesion={cerrarSesion}
         acciones={
           <nav id="dashboard-acciones" className="hidden sm:flex items-center gap-1">
-            {btnPanel(null, t.catalogo, "📦")}
-            {btnPanel("favoritos", t.favoritos, "🤍")}
-            {btnPanel("historial", t.historial, "📋")}
-            {btnPanel("carrito", t.carrito, "🛒")}
+            {btnPanel(null, t.catalogo, <LayoutGrid size={16} />)}
+            {btnPanel("favoritos", t.favoritos, <Heart size={16} />)}
+            {btnPanel("historial", t.historial, <Clock size={16} />)}
+            {btnPanel("carrito", t.carrito, <ShoppingCart size={16} />)}
           </nav>
         }
       />
@@ -202,52 +212,60 @@ export default function DashboardPage() {
       )}
 
       {panelActivo && (
-        <div
-          ref={panelRef}
-          className={`absolute z-40 bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden ${
-            panelActivo === "carrito"
-              ? "right-4 sm:right-6 top-20 w-80 max-h-[75vh]"
-              : panelActivo === "favoritos"
-              ? "right-4 sm:right-6 top-20 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[75vh]"
-              : "right-4 sm:right-6 top-20 w-[calc(100%-2rem)] sm:w-full max-w-xl max-h-[75vh]"
-          }`}
-        >
-          <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex justify-between items-center">
-            <span className="font-semibold text-slate-800">
-              {panelActivo === "carrito" && t.panelCarrito}
-              {panelActivo === "favoritos" && t.panelFavoritos}
-              {panelActivo === "historial" && t.panelHistorial}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPanelActivo(null)}
-              className="text-sm text-slate-400 hover:text-slate-700 cursor-pointer"
-            >
-              {t.cerrar}
-            </button>
-          </div>
+        <>
+          <div className="fixed inset-0 bg-black/10 z-30 sm:hidden" onClick={() => setPanelActivo(null)} />
+          <div
+            ref={panelRef}
+            className={`fixed z-40 bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden ${
+              panelActivo === "carrito"
+                ? "right-4 sm:right-6 top-20 w-[calc(100%-2rem)] sm:w-96 max-h-[80vh]"
+                : panelActivo === "favoritos"
+                ? "right-4 sm:right-6 top-20 w-[calc(100%-2rem)] sm:max-w-2xl sm:w-full max-h-[80vh]"
+                : "right-4 sm:right-6 top-20 w-[calc(100%-2rem)] sm:max-w-xl sm:w-full max-h-[80vh]"
+            }`}
+          >
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex justify-between items-center z-10">
+              <div className="flex items-center gap-2">
+                {panelActivo === "carrito" && <ShoppingCart size={18} className="text-indigo-600" />}
+                {panelActivo === "favoritos" && <Heart size={18} className="text-indigo-600" />}
+                {panelActivo === "historial" && <Clock size={18} className="text-indigo-600" />}
+                <span className="font-semibold text-slate-800">
+                  {panelActivo === "carrito" && t.panelCarrito}
+                  {panelActivo === "favoritos" && t.panelFavoritos}
+                  {panelActivo === "historial" && t.panelHistorial}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPanelActivo(null)}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-          <div className="p-5 overflow-y-auto max-h-[calc(75vh-4rem)]">
-            {panelActivo === "carrito" &&
-              (cargandoCarrito ? (
-                <EstadoCarga mensaje={t.sincronizando} tipo="sincronizando" />
-              ) : (
-                <CartDropdown
-                  cartItems={itemsCarrito as never}
-                  onUpdateQuantity={handleUpdateQuantity}
-                  onRemoveItem={handleRemoveCartItem}
-                  onCheckout={handleCheckout}
-                  procesando={procesandoCompra}
-                />
-              ))}
-            {panelActivo === "favoritos" && usuario && (
-              <FavoritesList userId={usuario.userId} onRemoveFavorite={handleRemoveFavorite} />
-            )}
-            {panelActivo === "historial" && usuario && (
-              <OrderHistory userId={usuario.userId} />
-            )}
+            <div className="p-5 overflow-y-auto max-h-[calc(80vh-4rem)]">
+              {panelActivo === "carrito" &&
+                (cargandoCarrito ? (
+                  <EstadoCarga mensaje={t.sincronizando} tipo="sincronizando" />
+                ) : (
+                  <CartDropdown
+                    cartItems={itemsCarrito as never}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemoveItem={handleRemoveCartItem}
+                    onCheckout={handleCheckout}
+                    procesando={procesandoCompra}
+                  />
+                ))}
+              {panelActivo === "favoritos" && usuario && (
+                <FavoritesList userId={usuario.userId} onRemoveFavorite={handleRemoveFavorite} />
+              )}
+              {panelActivo === "historial" && usuario && (
+                <OrderHistory userId={usuario.userId} />
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
@@ -256,7 +274,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold text-slate-800">{t.catalogo}</h1>
             <p className="text-sm text-slate-500 mt-1">Tu espacio personal de compras</p>
           </div>
-          <Link href="/" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+          <Link href={`/${idioma}`} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
             {t.volverCatalogo}
           </Link>
         </div>
@@ -268,12 +286,11 @@ export default function DashboardPage() {
         />
       </main>
 
-      {/* Barra inferior móvil */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2 z-50">
-        {btnPanel(null, "", "📦")}
-        {btnPanel("favoritos", "", "🤍")}
-        {btnPanel("historial", "", "📋")}
-        {btnPanel("carrito", "", "🛒")}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        {btnPanel(null, "", <LayoutGrid size={20} />)}
+        {btnPanel("favoritos", "", <Heart size={20} />)}
+        {btnPanel("historial", "", <Clock size={20} />)}
+        {btnPanel("carrito", "", <ShoppingCart size={20} />)}
       </nav>
     </div>
   );

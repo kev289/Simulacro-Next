@@ -1,6 +1,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+function getIdioma(): string {
+  if (typeof document === "undefined") return "es";
+  const match = document.cookie.match(/(?:^|;\s*)lang=(es|en|pt)/);
+  return match?.[1] || "es";
+}
+
 export function useLoginLogic() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -29,7 +35,7 @@ export function useLoginLogic() {
       }
 
       const params = new URLSearchParams(window.location.search);
-      const destino = params.get("redirect") || "/dashboard";
+      const destino = params.get("redirect") || `/${getIdioma()}/dashboard`;
       router.push(destino);
 
     } catch (err: any) {

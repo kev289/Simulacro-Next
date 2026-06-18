@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: simulacro-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - simulacro-net
+
+  app:
+    build: .
+    container_name: simulacro-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/simulacro-ecommerce
+      - JWT_SECRET=dev-secret-key-simulacro-2026-cambiar-en-produccion
+      - NODE_ENV=development
+    networks:
+      - simulacro-net
+
+volumes:
+  mongo_data:
+
+networks:
+  simulacro-net:
+    driver: bridge
