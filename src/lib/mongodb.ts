@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
+import { startEmailAutomation } from '../services/mail.service';
 
 function getMongoUri(): string {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error('MONGODB_URI no está configurada. Verifica el archivo .env o las variables de entorno del contenedor.');
+    throw new Error('Error');
   }
   return uri;
 }
@@ -14,15 +15,20 @@ type MongooseCache = {
 };
 
 declare global {
-  var mongooseCache: MongooseCache | undefined;
+  interface CustomGlobal {
+    mongooseCache: MongooseCache | undefined;
+    cronInitialized: boolean | undefined;
+  }
 }
 
-const cached: MongooseCache = global.mongooseCache ?? {
+const globalContext = globalThis as unknown as CustomGlobal;
+
+const cached: MongooseCache = globalContext.mongooseCache ?? {
   conn: null,
   promise: null,
 };
 
-global.mongooseCache = cached;
+globalContext.mongooseCache = cached;
 
 async function connectDB() {
   if (cached.conn) {
@@ -41,6 +47,13 @@ async function connectDB() {
 
   try {
     cached.conn = await cached.promise;
+    
+    if (!globalContext.cronInitialized) {
+      startEmailAutomation();
+      globalContext.cronInitialized = true;
+      console.log("Automatización de correos");
+    }
+
   } catch (e) {
     cached.promise = null;
     throw e;
